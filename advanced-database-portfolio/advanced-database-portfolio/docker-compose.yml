@@ -1,0 +1,19 @@
+# Local PostgreSQL 16 for the Harmetage Private School portfolio.
+# Start:  docker compose up -d
+# Shell:  docker exec -it harmetage-pg psql -U harmetage -d harmetage
+services:
+  postgres:
+    image: postgres:16
+    container_name: harmetage-pg
+    environment:
+      POSTGRES_USER: harmetage
+      POSTGRES_PASSWORD: harmetage_dev   # local development only
+      POSTGRES_DB: harmetage
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./:/workspace:ro                 # repo mounted read-only so psql -f can see the scripts
+
+volumes:
+  pgdata:
