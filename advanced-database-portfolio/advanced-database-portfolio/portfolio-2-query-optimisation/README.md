@@ -88,13 +88,13 @@ The **Prediction** column is for you to complete before you run the AFTER plans.
 
 | Query | Plan type BEFORE | Time BEFORE (ms) | Prediction | Plan type AFTER | Time AFTER (ms) | Speed-up |
 |---|---|---|---|---|---|---|
-| Q1 | | | | | | |
-| Q2 | | | | | | |
-| Q3 | | | | | | |
-| Q4 | | | | | | |
-| Q5 | | | | | | |
-| Q6A | | | | | | |
-| Q6B | | | | | | |
+| Q1 | Sort | 31.139ms | Bit faster | Sort | 1.880ms | 16.563 |
+| Q2 | Sort | 33.022ms | Bit faster | Sort | 1.714ms | 19.266 |
+| Q3 | Sort | 26.755ms | Bit faster | Sort | 5.483ms | 4.879 |
+| Q4 | Sort | 4.205ms | Bit faster | Sort | 0.163ms |  25.797 |
+| Q5 | Limit | 2.255ms | Much faster | Limit | 1.263ms | 1.785 |
+| Q6A | Group aggregrate | 96.806ms| Much faster | Group aggregrate | 22.868ms | 4.233 |
+| Q6B | Group aggregrate | 79.084ms| Much faster | Sort | 5.693ms | 13.891 |
 
 Speed-up = time before divided by time after.
 
@@ -102,11 +102,11 @@ Speed-up = time before divided by time after.
 
 Write this section yourself once the table is filled in, in a few short paragraphs. Cover:
 
-1. **Which queries improved most, and why.** Name the plan change you saw (for example `Seq Scan` to `Index Scan`) and what `Rows Removed by Filter` or `Buffers` showed.
-2. **Which queries barely changed, and why.** For example, a query that already used a primary key index, or one that returns a large share of the table, where reading everything is cheap.
-3. **What Q6A versus Q6B showed.** Did the index help Q6A at all? What does that tell you about functions in a `WHERE` clause?
-4. **The cost of indexes.** Every index takes disk space and slows down inserts and updates. Check the sizes with `SELECT pg_size_pretty(pg_relation_size('harmetage.idx_attendance_date_status'));` and discuss whether each index is worth it for a school database.
-5. **Anything that surprised you.**
+1. **Which queries improved most, and why.** The most improved queries are Q2 and Q4, it shows a massive performance change. In the plan, both queries were replaced by the Bitmap index scan from the sequential scan.
+In the before plan, values were high because thousands of heap pages had to be fetched and read into the memory. In the after plan, it dropped significantly because the index filter narrowed down the target tuples before reading the table pages.
+2. **Which queries barely changed, and why.** The least improved queries is Q5, which the before time is 2.255ms and the after time is 1.263ms (a quiet low performance). Q5 used a primary key index that returns a large share of the table, where reading the table is cheap.
+3. **The cost of indexes.** The cost of the index size is 4608KB which is 4.6MB. The index is lightweight. Paying 4 MB of disk space to trade a 96ms disk scan for a 5ms index lookup is a massive performance win for the database.
+4. **Anything that surprised you.** The change effect in the operator of Q6b which transition from *Group aggregate* 79.084ms as the before time to *Sort* (5.693ms) as the after time.
 
 ## Limitations
 
@@ -125,4 +125,4 @@ Save these in `evidence/`:
 - [ ] `indexes_created.png`: script 05 completing successfully
 - [ ] `q1_after.png` to `q6b_after.png`: the AFTER plan for each query (7 screenshots)
 - [ ] `index_sizes.png`: the index size query from the analysis section
-- [ ] `performance_table.png`: your completed results table
+
