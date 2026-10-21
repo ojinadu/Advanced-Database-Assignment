@@ -78,9 +78,18 @@ Teacher A locks student 0001's score then asks for student 0002's. Teacher B loc
 Write this yourself after running the experiments. Questions to cover:
 
 1. For score entry, would you choose the `REPEATABLE READ` approach (let both teachers try, reject the second) or the `FOR UPDATE` approach (first teacher locks the row)? Teachers enter scores in bursts at the end of term, and conflicts on the same score are rare. Which costs less?
+During the end of the term score entry, conflicts are rare and teacher works in an unexpected speed. ‘REPETABLE READ’ is better.
+Under REPEATABLE READ, the database does not hold locks while teachers are actively typing or thinking. Because conflicts happen rarely, almost all transactions succeed on the first try without waiting. 
+FOR UPDATE, on the other hand, aggressively locks database rows as soon as the first teacher touches them. This forces concurrent teachers to block and wait, increasing contention and overhead during peak end-of-term reporting periods when database resources are already stretched thin.
 2. For class enrolment on admission day, why is locking the better choice?
+Because more than one staff members can attempt to register a student in a class at the same time which can exceed the physical maximum capacity of a class.
+Locking is necessary so as to eliminate over-enrolment bug (31 students in class meant for 30), which will force the second transaction to wait until the first transaction is updated
 3. Should the fee report use `REPEATABLE READ` always? What would a parent think if a receipt and a report disagreed?
+No.
+If a parent think a receipt and report disagree, it will lead to lack of trust, inconsistency and disputes between the parent and the school
 4. What did PostgreSQL do about the deadlock, and what should the school's application do when it receives that error?
+When PostgreSQL detects a deadlock, it automatically steps in as an impartial referee. It aborts and rolls back one of the transactions (throwing a red error, such as a serialization or deadlock failure) to allow the other transaction to proceed and finish its work.
+The school's application code should catch this specific deadlock error, wait for a brief, randomized backoff period (milliseconds), and automatically retry the transaction. Because deadlocks are usually temporary timing collisions under high concurrency, a clean retry will almost always succeed on the second attempt without requiring human intervention
 
 ## Evidence
 

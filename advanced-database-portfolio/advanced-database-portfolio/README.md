@@ -21,7 +21,7 @@ Harmetage Private School is a private secondary school running JSS1 to SS3 on a 
 |---|---|---|
 | [`portfolio-1-database-design`](portfolio-1-database-design/) | ER diagram, relational schema, keys, constraints, normalisation | Done |
 | [`portfolio-2-query-optimisation`](portfolio-2-query-optimisation/) | SQL queries, execution plans, indexing, performance analysis | Done |
-| [`portfolio-3-transactions-concurrency`](portfolio-3-transactions-concurrency/) | Commit, rollback, isolation levels, concurrency control | Not started |
+| [`portfolio-3-transactions-concurrency`](portfolio-3-transactions-concurrency/) | Commit, rollback, isolation levels, concurrency control | Done |
 | [`portfolio-4-nosql`](portfolio-4-nosql/) | NoSQL model for the same school | Not started |
 | [`portfolio-5-distributed-cloud`](portfolio-5-distributed-cloud/) | Replication, availability, consistency, deployment | Not started |
 
