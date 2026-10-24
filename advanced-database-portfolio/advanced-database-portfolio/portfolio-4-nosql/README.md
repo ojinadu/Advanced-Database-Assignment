@@ -109,9 +109,15 @@ MongoDB's `_id` is always indexed, which is why `findOne({ _id })` is fast from 
 Write a few paragraphs in your own words after running everything:
 
 1. Query 2 in `01_queries.js` and query 2 in Portfolio 1 return the same report card. Which was easier to write? Which would you rather maintain if the school changed its grading bands?
+MongoDB was easier to write for a complete report card because all data is already pre-aggregated into a single nested JSON document. While PostgreSQL requires joining multiple tables.
+PostgreSQL is easier and safer to maintain because they are stored in a single lookup table. While MongoDB are directly inside every student’s nested array in every stored documents.
 2. What happens to the MongoDB copy when a score is corrected in PostgreSQL after export? How would you keep them in sync?
+The MongoDB copy immediately becomes stale and out-of-sync (data drift). Because MongoDB holds a static snapshot generated at export time, any UPDATE in PostgreSQL will not automatically reflect in MongoDB.
+Change data capture, Data Triggers, Periodic Batch sync
 3. Did the aggregation pipeline feel harder or easier than SQL `GROUP BY`? Why?
+SQL group feels easier because it uses clear declarative keywords. While MongoDB feels harder because subjects are stored inside an array within each document
 4. Would you store fee payments as documents? Why or why not?
+No, fee payments should stay in a Relational Database (RDBMS), or be modeled carefully as separate referenced documents rather than embedded arrays. Because of ACID compliance and financial integrity.
 
 ## Evidence
 
