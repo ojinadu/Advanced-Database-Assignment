@@ -1,0 +1,70 @@
+# =====================================================================
+# Portfolio 5: a two-node PostgreSQL cluster for Harmetage Private School.
+#   primary  -> accepts reads and writes, port 5433 on your computer
+#   replica  -> read-only copy kept in sync by streaming replication, port 5434
+# Ports 5433/5434 are used so they don't clash with the PostgreSQL you
+# installed for Portfolios 1 to 4 (which is on 5432).
+#
+# Start:    docker compose up -d          (run from THIS folder)
+# Stop:     docker compose down
+# Wipe:     docker compose down -v        (deletes the data, start fresh)
+# =====================================================================
+services:
+  primary:
+    image: postgres:16
+    container_name: harmetage-primary
+    environment:
+      POSTGRES_USER: harmetage
+      POSTGRES_PASSWORD: harmetage_dev        # local development only
+      POSTGRES_DB: harmetage
+      REPLICATION_PASSWORD: replica_dev
+    ports:
+      - "5433:5432"
+    volumes:
+      - primary_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - ../../:/workspace:ro                 # whole repo, so psql -f can reach the Portfolio 1 scripts
+    command: >
+      postgres -c wal_level=replica
+               -c max_wal_senders=5
+               -c max_replication_slots=5
+               -c hot_standby=on
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harmetage -d harmetage"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  replica:
+    image: postgres:16
+    container_name: harmetage-replica
+    depends_on:
+      primary:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: harmetage
+      POSTGRES_PASSWORD: harmetage_dev
+      PGPASSWORD: replica_dev
+    ports:
+      - "5434:5432"
+    volumes:
+      - replica_data:/var/lib/postgresql/data
+      - ../../:/workspace:ro
+    # On first start, copy the primary with pg_basebackup. "-R" writes the
+    # settings that make this node a standby. After that, start normally.
+    command: >
+      bash -c "
+        if [ ! -s /var/lib/postgresql/data/PG_VERSION ]; then
+          echo 'Taking base backup from primary...';
+          until pg_basebackup -h primary -p 5432 -U replicator -D /var/lib/postgresql/data -R -X stream -C -S replica_slot; do
+            echo 'primary not ready, retrying'; sleep 2;
+          done;
+          chown -R postgres:postgres /var/lib/postgresql/data;
+          chmod 0700 /var/lib/postgresql/data;
+        fi;
+        exec docker-entrypoint.sh postgres -c hot_standby=on
+      "
+
+volumes:
+  primary_data:
+  replica_data:
