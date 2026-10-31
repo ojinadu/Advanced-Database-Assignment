@@ -154,9 +154,15 @@ Create a free PostgreSQL project on Neon (neon.tech), which offers read replicas
 Write a few paragraphs in your own words:
 
 1. How long was the replica behind the primary in your test? Would that lag ever be visible to a parent?
+It was behind for about few seconds, typically measured in low millisecond
+The lag would never be visible to parent because parent interact with read-only views (i.e parent will only see up-to-date information.
 2. During failover, what did parents experience and what did teachers experience?
+Since most parents perform read operations (viewing information), they may experience uninterruptable read access during primary failure but may encounter temporary error or timeout when performing write operations.
+Teachers are heavy users of write operations (inputting grades and so on). During primary downtime, teachers would experience errors while trying to save or update records.
 3. Why is partitioning by session more useful than sharding for Harmetage today?
+Partitioning by session (such as dividing data by academic terms, years, or enrollment sessions) is far more practical for Harmetage today than sharding for several reasons: Data alignment with school operations and avoiding unnecessary complexity 
 4. If you were advising the school, would you recommend managed cloud PostgreSQL or a server in the school office? What are the two strongest reasons?
+My recommendation would be managed cloud PostgreSQL because of his reliability, security overhead and automated backups.
 
 ## Evidence
 
